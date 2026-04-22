@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Open OSCAR – Verwaltung</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar" aria-label="Hauptnavigation">
+        <div class="brand">
+          Open OSCAR
+          <small>Management-Konsole</small>
+        </div>
+        <button type="button" class="nav-btn active" data-view="dashboard">Übersicht</button>
+        <button type="button" class="nav-btn" data-view="users">Benutzer</button>
+        <button type="button" class="nav-btn" data-view="sessions">Sitzungen</button>
+        <button type="button" class="nav-btn" data-view="chat">Chatrooms</button>
+        <button type="button" class="nav-btn" data-view="im">Instant Message</button>
+        <button type="button" class="nav-btn" data-view="webapi">Web-API-Schlüssel</button>
+        <button type="button" class="nav-btn" data-view="directory">Verzeichnis</button>
+      </aside>
+      <main>
+        <div id="status-bar" class="status-bar" role="status"></div>
+
+        <section id="view-dashboard" class="view">
+          <h1>Übersicht</h1>
+          <p class="sub">Status der Management-API und laufende Verbindungen.</p>
+          <div class="panel">
+            <h2>Server-Build</h2>
+            <pre id="version-json" class="raw mono">Lade…</pre>
+          </div>
+          <div class="panel">
+            <h2>Schnellaktionen</h2>
+            <div class="row">
+              <button type="button" class="btn btn-primary" id="btn-refresh-all">Alles aktualisieren</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-users" class="view hidden">
+          <h1>Benutzer</h1>
+          <p class="sub">
+            Konten anlegen; über <strong>Details</strong> Profil, ICQ-Daten, Buddyliste (Feedbag) und Passwort bearbeiten.
+            Direktlink: <code class="mono">#/benutzer/&lt;Ident&gt;</code>
+          </p>
+          <div class="panel">
+            <h2>Neuen Benutzer anlegen</h2>
+            <form id="form-create-user" class="row">
+              <label>Screen Name / UIN <input name="screen_name" required autocomplete="off" /></label>
+              <label>Passwort <input name="password" type="password" required autocomplete="new-password" /></label>
+              <button type="submit" class="btn btn-primary">Anlegen</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h2>Alle Konten</h2>
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-users">Liste laden</button>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="data" id="table-users">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Anzeige</th>
+                    <th>Typ</th>
+                    <th>Konto</th>
+                    <th>Präsenz</th>
+                    <th>Client</th>
+                    <th>Bot</th>
+                    <th>Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p id="users-empty" class="empty hidden">Noch keine Daten geladen.</p>
+          </div>
+        </section>
+
+        <section id="view-sessions" class="view hidden">
+          <h1>Aktive Sitzungen</h1>
+          <p class="sub">Eingeloggte Clients; „Trennen“ schließt alle Instanzen dieses Kontos.</p>
+          <div class="panel">
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-sessions">Aktualisieren</button>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="data" id="table-sessions">
+                <thead>
+                  <tr>
+                    <th>Screen Name</th>
+                    <th>Online (s)</th>
+                    <th>Instanzen</th>
+                    <th>Status</th>
+                    <th>Aktion</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-chat" class="view hidden">
+          <h1>Chatrooms</h1>
+          <p class="sub">Öffentliche Räume der Exchange <span class="mono">5</span> (Public).</p>
+          <div class="panel">
+            <h2>Neuen öffentlichen Raum</h2>
+            <form id="form-create-room" class="row">
+              <label>Name (1–50 Zeichen) <input name="name" required maxlength="50" /></label>
+              <button type="submit" class="btn btn-primary">Erstellen</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h2>Öffentliche Räume</h2>
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-rooms">Aktualisieren</button>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="data" id="table-rooms">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Teilnehmer</th>
+                    <th>URL</th>
+                    <th>Löschen</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <h2>Private Räume (nur Anzeige)</h2>
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-private-rooms">Aktualisieren</button>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="data" id="table-private-rooms">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Ersteller</th>
+                    <th>Teilnehmer</th>
+                    <th>URL</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-im" class="view hidden">
+          <h1>Instant Message</h1>
+          <p class="sub">Nachricht über den Server an einen eingeloggten Benutzer senden (<code>POST /instant-message</code>).</p>
+          <div class="panel">
+            <form id="form-im" class="row" style="flex-direction: column; align-items: stretch">
+              <label>Von (Screen Name / UIN) <input name="from" required autocomplete="off" /></label>
+              <label>An <input name="to" required autocomplete="off" /></label>
+              <label>Text <textarea name="text" required rows="3"></textarea></label>
+              <div><button type="submit" class="btn btn-primary">Senden</button></div>
+            </form>
+          </div>
+        </section>
+
+        <section id="view-webapi" class="view hidden">
+          <h1>Web-API-Schlüssel</h1>
+          <p class="sub">Entwicklerschlüssel für die AIM Web API (<code>/admin/webapi/keys</code>).</p>
+          <div class="panel">
+            <h2>Neuen Schlüssel</h2>
+            <form id="form-webapi-key" class="row">
+              <label>App-Name <input name="app_name" required /></label>
+              <label>Rate Limit / Min. <input name="rate_limit" type="number" min="1" value="60" /></label>
+              <button type="submit" class="btn btn-primary">Erzeugen</button>
+            </form>
+            <p class="empty" id="webapi-created-hint" style="margin-top: 0.75rem"></p>
+          </div>
+          <div class="panel">
+            <h2>Vorhandene Schlüssel</h2>
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-keys">Aktualisieren</button>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="data" id="table-keys">
+                <thead>
+                  <tr>
+                    <th>Dev-ID</th>
+                    <th>App</th>
+                    <th>Aktiv</th>
+                    <th>Limit</th>
+                    <th>Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-user-buddys" class="view hidden">
+          <div class="detail-header">
+            <button type="button" class="btn btn-ghost" id="btn-user-buddys-back-users">← Benutzerliste</button>
+            <button type="button" class="btn btn-ghost" id="btn-user-buddys-back-detail">Benutzerdetails</button>
+            <h1 id="buddy-admin-title">Buddyliste</h1>
+          </div>
+          <p class="sub">
+            Feedbag-Einträge pro Gruppe: Name, IDs, Klasse und TLVs (Tag + Hex-Payload). Speichern sendet
+            <code>PATCH /feedbag/…/buddy/item/…</code> an den Open OSCAR Server.
+          </p>
+          <div class="row">
+            <button type="button" class="btn" id="btn-buddy-admin-reload">Neu laden</button>
+          </div>
+          <div id="buddy-admin-root"></div>
+        </section>
+
+        <section id="view-user-detail" class="view hidden">
+          <div class="detail-header">
+            <button type="button" class="btn btn-ghost" id="btn-user-detail-back">← Zurück zur Liste</button>
+            <button type="button" class="btn btn-ghost" id="btn-user-detail-buddys">Buddyliste bearbeiten</button>
+            <h1 id="user-detail-title">Benutzerdetails</h1>
+          </div>
+          <p class="sub" id="user-detail-sub"></p>
+
+          <div class="panel">
+            <h2>Konto &amp; Status</h2>
+            <p class="empty" style="margin-top: 0">
+              Schreibbar: Sperrstatus und Bot-Flag. E-Mail, Registrierungsstatus und AIM-Profiltext kommen nur per GET
+              (Änderung dafür ist in der Management-API nicht vorgesehen).
+            </p>
+            <div class="field-grid" style="margin-bottom: 0.75rem">
+              <label>Ident (ID) <input id="detail-ident" readonly class="mono" /></label>
+              <label>Anzeigename <input id="detail-screen" readonly /></label>
+              <label>E-Mail (nur Lesen) <input id="detail-email" readonly /></label>
+              <label>Reg.-Status (nur Lesen) <input id="detail-reg" readonly class="mono" /></label>
+              <label>Bestätigt <input id="detail-confirmed" readonly /></label>
+            </div>
+            <div class="row" style="align-items: flex-end">
+              <label>Sperrstatus
+                <select id="detail-suspended">
+                  <option value="">Keine Sperre (leer)</option>
+                  <option value="deleted">deleted</option>
+                  <option value="expired">expired</option>
+                  <option value="suspended">suspended</option>
+                  <option value="suspended_age">suspended_age</option>
+                </select>
+              </label>
+              <label style="flex-direction: row; align-items: center; gap: 0.5rem; text-transform: none">
+                <input type="checkbox" id="detail-bot" />
+                <span style="color: var(--text); letter-spacing: 0">Bot-Konto</span>
+              </label>
+              <button type="button" class="btn btn-primary" id="btn-save-account">Konto speichern</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Passwort</h2>
+            <div class="row">
+              <label>Neues Passwort <input type="password" id="detail-password" autocomplete="new-password" /></label>
+              <button type="button" class="btn btn-primary" id="btn-save-password">Passwort setzen</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>AIM-Profil (HTML, nur Lesen)</h2>
+            <textarea id="detail-profile" readonly rows="8" class="mono" style="width: 100%"></textarea>
+            <p class="empty" style="margin-bottom: 0">
+              <a id="detail-icon-link" href="#" target="_blank" rel="noopener">Buddy-Icon öffnen</a> (falls vorhanden)
+            </p>
+          </div>
+
+          <div class="panel hidden" id="panel-icq-profile">
+            <h2>ICQ-Profil</h2>
+            <p class="empty" style="margin-top: 0">Alle Felder speichern mit „ICQ-Profil speichern“.</p>
+            <div id="icq-fields"></div>
+            <div class="row">
+              <button type="button" class="btn btn-primary" id="btn-save-icq">ICQ-Profil speichern</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Buddyliste (Feedbag)</h2>
+            <p class="empty" style="margin-top: 0">
+              Gruppen und Buddys wie in der Management-API (<code>GET /feedbag/…/group</code>). Ohne Feedbag-Daten
+              (z.&nbsp;B. neues Konto) liefert der Server 404 – dann Buddyliste z.&nbsp;B. nach AIM-Anmeldung erneut laden.
+            </p>
+            <div class="row">
+              <button type="button" class="btn" id="btn-reload-feedbag">Buddyliste neu laden</button>
+            </div>
+            <div id="feedbag-groups"></div>
+            <div class="row" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem">
+              <label>Buddy hinzufügen in Gruppe
+                <select id="buddy-add-group"></select>
+              </label>
+              <label>Screen Name oder UIN <input id="buddy-add-name" autocomplete="off" placeholder="z.B. BuddyName" /></label>
+              <button type="button" class="btn btn-primary" id="btn-buddy-add">Hinzufügen</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Sitzung</h2>
+            <div class="row">
+              <button type="button" class="btn btn-danger" id="btn-detail-kick">Eingeloggte Clients trennen</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-directory" class="view hidden">
+          <h1>Verzeichnis (Interessen)</h1>
+          <p class="sub">Kategorien und Schlagwörter für die AIM-Suche.</p>
+          <div class="panel">
+            <h2>Neue Kategorie</h2>
+            <form id="form-dir-cat" class="row">
+              <label>Name <input name="name" required /></label>
+              <button type="submit" class="btn btn-primary">Anlegen</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h2>Kategorien &amp; Keywords</h2>
+            <div class="row">
+              <button type="button" class="btn" id="btn-load-directory">Aktualisieren</button>
+            </div>
+            <div id="directory-tree"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
